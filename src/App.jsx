@@ -16,7 +16,8 @@ import {
   Users, 
   Check,
   Search,
-  Sun
+  Sun,
+  Download
 } from 'lucide-react';
 
 // Seed initial data for a 40-seat library
@@ -104,6 +105,29 @@ function App() {
     const saved = localStorage.getItem('library_seats');
     return saved ? JSON.parse(saved) : generateInitialSeats();
   });
+
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+      setIsInstallable(false);
+    }
+  };
   
   // Active view toggle on the map (Morning / Evening / Full Day)
   const [viewShift, setViewShift] = useState('morning');
@@ -436,6 +460,33 @@ function App() {
               <option value="realtime">🔌 Real Time Clock</option>
             </select>
           </div>
+
+          {isInstallable && (
+            <button 
+              onClick={handleInstallApp}
+              className="btn-install-app"
+              style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                border: 'none',
+                color: '#fff',
+                padding: '6px 12px',
+                borderRadius: '10px',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 0 10px rgba(16, 185, 129, 0.3)',
+                transition: 'opacity 0.2s'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
+              onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+            >
+              <Download size={14} />
+              Install App
+            </button>
+          )}
 
           {/* Map View Toggle */}
           <div className="toggle-group">
