@@ -25,3 +25,6 @@ dist-ssr
 
 # Agent files
 .agents
+
+# Local memory file
+memory.md
