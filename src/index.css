@@ -270,6 +270,23 @@ body {
   .ledger-panel.drawer-open {
     right: 0;
   }
+
+  .header-shift-legend {
+    display: none !important;
+  }
+  
+  .drawer-shift-legend {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid var(--border) !important;
+    padding: 16px !important;
+    border-radius: 12px !important;
+    margin-bottom: 8px !important;
+    width: 100% !important;
+  }
 }
 
 /* Map Section */
@@ -717,6 +734,31 @@ body {
   font-size: 13px;
 }
 
+.btn-install-app {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+  transition: opacity 0.2s;
+  width: max-content;
+}
+
+.btn-install-app:hover {
+  opacity: 0.9;
+}
+
+.drawer-shift-legend {
+  display: none;
+}
+
 .ledger-toggle-btn {
   display: none;
 }
@@ -821,5 +863,12 @@ body {
   .shift-tag {
     font-size: 7px;
     padding: 0px 2px;
+  }
+
+  .btn-install-app {
+    align-self: flex-start !important;
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+    border-radius: 8px !important;
   }
 }

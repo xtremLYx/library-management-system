@@ -429,8 +429,8 @@ function App() {
         </div>
         
         <div className="control-hub">
-          {/* Shift Abbreviation Legend */}
-          <div className="shift-legend" style={{ display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', padding: '6px 12px', borderRadius: '12px', fontSize: '12px' }}>
+          {/* Shift Abbreviation Legend (Header view) */}
+          <div className="shift-legend header-shift-legend" style={{ display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', padding: '6px 12px', borderRadius: '12px', fontSize: '12px' }}>
             <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Shift Guide:</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <span className="shift-tag morning" style={{ padding: '2px 4px', borderRadius: '3px', fontSize: '10px' }}>M</span> Morning (6h)
@@ -447,23 +447,6 @@ function App() {
             <button 
               onClick={handleInstallApp}
               className="btn-install-app"
-              style={{
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                border: 'none',
-                color: '#fff',
-                padding: '6px 12px',
-                borderRadius: '10px',
-                fontSize: '12px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                boxShadow: '0 0 10px rgba(16, 185, 129, 0.3)',
-                transition: 'opacity 0.2s'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
-              onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
             >
               <Download size={14} />
               Install App
@@ -676,6 +659,25 @@ function App() {
               <BookOpen size={20} style={{ color: 'var(--accent)' }} />
               Fee Ledger Hub
             </h2>
+          </div>
+
+          {/* Shift Abbreviation Legend inside Drawer (Mobile view) */}
+          <div className="shift-legend drawer-shift-legend">
+            <span style={{ color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '8px', display: 'block' }}>Shift Guide</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="shift-tag morning" style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>M</span> 
+                <span style={{ color: 'var(--text-primary)' }}>Morning Shift (6 Hours)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="shift-tag evening" style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>E</span> 
+                <span style={{ color: 'var(--text-primary)' }}>Evening Shift (6 Hours)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="shift-tag fullday" style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>FD</span> 
+                <span style={{ color: 'var(--text-primary)' }}>Full Day Shift (12 Hours)</span>
+              </div>
+            </div>
           </div>
 
           {/* Quick Metrics */}
