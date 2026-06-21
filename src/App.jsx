@@ -61,13 +61,6 @@ const generateInitialSeats = () => {
 };
 
 // Help helper to evaluate real-time system clock to active shift
-const getRealTimeShift = () => {
-  const hour = new Date().getHours();
-  if (hour >= 8 && hour < 14) return 'morning'; // 8 AM to 2 PM
-  if (hour >= 14 && hour < 20) return 'evening'; // 2 PM to 8 PM
-  return 'closed';
-};
-
 // Helper to format date strings (YYYY-MM-DD) to "DD Month YYYY" (e.g. 18 May 2026)
 const formatDate = (dateStr) => {
   if (!dateStr) return '';
@@ -132,10 +125,6 @@ function App() {
   // Active view toggle on the map (Morning / Evening / Full Day)
   const [viewShift, setViewShift] = useState('morning');
   
-  // Real-time active shift for name highlighting/fading
-  const [currentActiveShift, setCurrentActiveShift] = useState('morning');
-  const [useRealTime, setUseRealTime] = useState(false);
-  
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSeat, setSelectedSeat] = useState(null);
@@ -177,18 +166,7 @@ function App() {
     localStorage.setItem('library_seats', JSON.stringify(seats));
   }, [seats]);
 
-  // Track dynamic real-time shift updates
-  useEffect(() => {
-    if (useRealTime) {
-      const updateShift = () => {
-        const shift = getRealTimeShift();
-        setCurrentActiveShift(shift === 'closed' ? 'morning' : shift);
-      };
-      updateShift();
-      const interval = setInterval(updateShift, 60000); // check every minute
-      return () => clearInterval(interval);
-    }
-  }, [useRealTime]);
+
 
   // Note: Booking statuses are calculated dynamically in real-time
 
@@ -438,27 +416,18 @@ function App() {
         </div>
         
         <div className="control-hub">
-          {/* Active Shift Simulator */}
-          <div className="sim-controls">
-            <span className="sim-label">Active Shift (Highlighting):</span>
-            <select 
-              value={useRealTime ? 'realtime' : currentActiveShift} 
-              onChange={(e) => {
-                if (e.target.value === 'realtime') {
-                  setUseRealTime(true);
-                  const shift = getRealTimeShift();
-                  setCurrentActiveShift(shift === 'closed' ? 'morning' : shift);
-                } else {
-                  setUseRealTime(false);
-                  setCurrentActiveShift(e.target.value);
-                }
-              }}
-              className="sim-select"
-            >
-              <option value="morning">Morning Shift (8AM - 2PM)</option>
-              <option value="evening">Evening Shift (2PM - 8PM)</option>
-              <option value="realtime">🔌 Real Time Clock</option>
-            </select>
+          {/* Shift Abbreviation Legend */}
+          <div className="shift-legend" style={{ display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', padding: '6px 12px', borderRadius: '12px', fontSize: '12px' }}>
+            <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Shift Guide:</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span className="shift-tag morning" style={{ padding: '2px 4px', borderRadius: '3px', fontSize: '10px' }}>M</span> Morning (6h)
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span className="shift-tag evening" style={{ padding: '2px 4px', borderRadius: '3px', fontSize: '10px' }}>E</span> Evening (6h)
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span className="shift-tag fullday" style={{ padding: '2px 4px', borderRadius: '3px', fontSize: '10px' }}>FD</span> Full Day (12h)
+            </span>
           </div>
 
           {isInstallable && (
@@ -635,7 +604,7 @@ function App() {
                   <div className="seat-number">
                     <span>{seat.id}</span>
                     <span className={`seat-indicator indicator-${activeBooking ? getBookingStatus(activeBooking) : 'avail'}`}>
-                      {seat.fullday ? 'Full' : activeBooking ? getBookingStatus(activeBooking) : 'Free'}
+                      {activeBooking ? getBookingStatus(activeBooking) : 'Free'}
                     </span>
                   </div>
 
