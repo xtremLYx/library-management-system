@@ -422,9 +422,14 @@ function App() {
             className="ledger-toggle-btn"
             onClick={() => setIsLedgerOpen(true)}
             title="Open Fee Ledger"
+            style={{ position: 'relative' }}
           >
             <Menu size={20} style={{ color: 'var(--accent)' }} />
-            <span className="badge badge-overdue" style={{ fontSize: '9px', padding: '1px 5px' }}>{alerts.length}</span>
+            {alerts.length > 0 && (
+              <span className="ledger-badge">
+                {alerts.length}
+              </span>
+            )}
           </button>
         </div>
         
@@ -662,20 +667,20 @@ function App() {
           </div>
 
           {/* Shift Abbreviation Legend inside Drawer (Mobile view) */}
-          <div className="shift-legend drawer-shift-legend">
-            <span style={{ color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '8px', display: 'block' }}>Shift Guide</span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="shift-tag morning" style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>M</span> 
-                <span style={{ color: 'var(--text-primary)' }}>Morning Shift (6 Hours)</span>
+          <div className="drawer-shift-legend">
+            <span className="drawer-shift-legend-title">Shift Guide:</span>
+            <div className="drawer-shift-legend-items">
+              <div className="drawer-shift-legend-item">
+                <span className="shift-tag morning">M</span> 
+                <span>Morning</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="shift-tag evening" style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>E</span> 
-                <span style={{ color: 'var(--text-primary)' }}>Evening Shift (6 Hours)</span>
+              <div className="drawer-shift-legend-item">
+                <span className="shift-tag evening">E</span> 
+                <span>Evening</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="shift-tag fullday" style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>FD</span> 
-                <span style={{ color: 'var(--text-primary)' }}>Full Day Shift (12 Hours)</span>
+              <div className="drawer-shift-legend-item">
+                <span className="shift-tag fullday">FD</span> 
+                <span>Full Day</span>
               </div>
             </div>
           </div>
