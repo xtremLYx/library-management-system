@@ -17,8 +17,10 @@ import {
   Check,
   Search,
   Sun,
-  Download
+  Download,
+  Menu
 } from 'lucide-react';
+
 
 // Seed initial data for a 40-seat library
 const generateInitialSeats = () => {
@@ -101,6 +103,7 @@ function App() {
 
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [isLedgerOpen, setIsLedgerOpen] = useState(false);
 
   useEffect(() => {
     const handleBeforeInstall = (e) => {
@@ -410,9 +413,19 @@ function App() {
     <div id="root">
       {/* Dashboard Top Header */}
       <header className="dashboard-header glass-panel">
-        <div className="brand-section">
-          <h1>SmartLibrary Manager</h1>
-          <p>Visual Seat Grid & Fee Reconciliation Engine</p>
+        <div className="brand-section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div>
+            <h1>SmartLibrary Manager</h1>
+            <p>Visual Seat Grid & Fee Reconciliation Engine</p>
+          </div>
+          <button 
+            className="ledger-toggle-btn"
+            onClick={() => setIsLedgerOpen(true)}
+            title="Open Fee Ledger"
+          >
+            <Menu size={20} style={{ color: 'var(--accent)' }} />
+            <span className="badge badge-overdue" style={{ fontSize: '9px', padding: '1px 5px' }}>{alerts.length}</span>
+          </button>
         </div>
         
         <div className="control-hub">
@@ -650,7 +663,14 @@ function App() {
         </main>
 
         {/* Right Side: Ledger Sidebar panel */}
-        <aside className="ledger-panel glass-panel">
+        <aside className={`ledger-panel glass-panel ${isLedgerOpen ? 'drawer-open' : ''}`}>
+          <button 
+            className="drawer-close-btn"
+            onClick={() => setIsLedgerOpen(false)}
+            title="Close Fee Ledger"
+          >
+            <X size={20} />
+          </button>
           <div className="ledger-header">
             <h2>
               <BookOpen size={20} style={{ color: 'var(--accent)' }} />
@@ -928,6 +948,14 @@ function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Translucent Drawer Overlay for Mobile */}
+      {isLedgerOpen && (
+        <div 
+          className="drawer-overlay"
+          onClick={() => setIsLedgerOpen(false)}
+        />
       )}
     </div>
   );

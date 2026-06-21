@@ -205,6 +205,73 @@ body {
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
+  
+  .ledger-toggle-btn {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .drawer-close-btn {
+    display: block !important;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    z-index: 11;
+  }
+  
+  .drawer-close-btn:hover {
+    color: var(--text-primary);
+  }
+
+  .drawer-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 998;
+  }
+  
+  .ledger-panel {
+    position: fixed;
+    top: 0;
+    right: -360px;
+    width: 320px;
+    height: 100vh;
+    border-radius: 0;
+    border-top: none;
+    border-bottom: none;
+    border-right: none;
+    z-index: 999;
+    margin: 0;
+    padding: 24px 20px;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(9, 13, 22, 0.6) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .ledger-panel.drawer-open {
+    right: 0;
+  }
 }
 
 /* Map Section */
@@ -652,6 +719,16 @@ body {
   font-size: 13px;
 }
 
+.ledger-toggle-btn {
+  display: none;
+}
+.drawer-close-btn {
+  display: none;
+}
+.drawer-overlay {
+  display: none;
+}
+
 @media (max-width: 600px) {
   #root {
     padding: 12px;
@@ -746,10 +823,5 @@ body {
   .shift-tag {
     font-size: 7px;
     padding: 0px 2px;
-  }
-  
-  .ledger-panel {
-    padding: 14px;
-    gap: 16px;
   }
 }
