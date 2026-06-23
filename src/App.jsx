@@ -105,6 +105,26 @@ function App() {
   const [isInstallable, setIsInstallable] = useState(false);
   const [isLedgerOpen, setIsLedgerOpen] = useState(false);
 
+  const [payments, setPayments] = useState(() => {
+    const saved = localStorage.getItem('library_payments');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [currentBillingMonth, setCurrentBillingMonth] = useState(() => {
+    const saved = localStorage.getItem('library_current_billing_month');
+    if (saved) return saved;
+    const date = new Date();
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    return `${months[date.getMonth()]} ${date.getFullYear()}`;
+  });
+
+  const [monthlySummaries, setMonthlySummaries] = useState(() => {
+    const saved = localStorage.getItem('library_monthly_summaries');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
   useEffect(() => {
     const handleBeforeInstall = (e) => {
       e.preventDefault();
@@ -169,9 +189,56 @@ function App() {
     localStorage.setItem('library_seats', JSON.stringify(seats));
   }, [seats]);
 
+  useEffect(() => {
+    localStorage.setItem('library_payments', JSON.stringify(payments));
+  }, [payments]);
+
+  useEffect(() => {
+    localStorage.setItem('library_current_billing_month', currentBillingMonth);
+  }, [currentBillingMonth]);
+
+  useEffect(() => {
+    localStorage.setItem('library_monthly_summaries', JSON.stringify(monthlySummaries));
+  }, [monthlySummaries]);
 
 
-  // Note: Booking statuses are calculated dynamically in real-time
+
+  const getNextMonthName = (currentMonthStr) => {
+    const parts = currentMonthStr.split(' ');
+    if (parts.length !== 2) return '';
+    const monthName = parts[0];
+    const year = parseInt(parts[1], 10);
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const idx = months.indexOf(monthName);
+    if (idx === -1) return '';
+    const nextIdx = (idx + 1) % 12;
+    const nextYear = nextIdx === 0 ? year + 1 : year;
+    return `${months[nextIdx]} ${nextYear}`;
+  };
+
+  const currentMonthCollection = payments
+    .filter(p => p.billingMonth === currentBillingMonth)
+    .reduce((sum, p) => sum + p.amount, 0);
+
+  const handleRolloverMonth = () => {
+    const nextMonth = getNextMonthName(currentBillingMonth);
+    const confirmMsg = `Are you sure you want to end the billing cycle for ${currentBillingMonth} and start the next cycle for ${nextMonth}? This will log the total of ₹${currentMonthCollection} into the history.`;
+    
+    if (window.confirm(confirmMsg)) {
+      const newSummary = {
+        month: currentBillingMonth,
+        totalCollected: currentMonthCollection,
+        activeBookings: seats.filter(s => s.morning || s.evening || s.fullday).length
+      };
+      
+      setMonthlySummaries(prev => {
+        const filtered = prev.filter(s => s.month !== currentBillingMonth);
+        return [...filtered, newSummary];
+      });
+      
+      setCurrentBillingMonth(nextMonth);
+    }
+  };
 
   // Set default fee on shift type change
   const handleShiftTypeChange = (e) => {
@@ -224,6 +291,18 @@ function App() {
       })
     );
 
+    // Record payment transaction
+    const newPayment = {
+      id: `pay_${Date.now()}`,
+      studentName: bookingForm.name,
+      seatId: selectedSeat.id,
+      shiftType: bookingForm.shiftType,
+      amount: Number(bookingForm.fee),
+      date: bookingForm.startDate,
+      billingMonth: currentBillingMonth
+    };
+    setPayments(prev => [...prev, newPayment]);
+
     // Reset Form & Close Modal
     setBookingForm({
       name: '',
@@ -237,23 +316,35 @@ function App() {
 
   // Renew Fee Booking
   const handleRenewBooking = (shiftKey) => {
+    const booking = selectedSeat[shiftKey];
+    if (!booking) return;
+
+    // Record payment transaction
+    const newPayment = {
+      id: `pay_${Date.now()}`,
+      studentName: booking.name,
+      seatId: selectedSeat.id,
+      shiftType: shiftKey,
+      amount: Number(booking.fee),
+      date: new Date().toISOString().split('T')[0],
+      billingMonth: currentBillingMonth
+    };
+    setPayments(prev => [...prev, newPayment]);
+
     setSeats(prevSeats => 
       prevSeats.map(seat => {
         if (seat.id === selectedSeat.id) {
           const updated = { ...seat };
-          const booking = updated[shiftKey];
-          if (booking) {
-            const currentDueDate = new Date(booking.dueDate);
-            const newDueDateObj = new Date(currentDueDate);
-            newDueDateObj.setDate(currentDueDate.getDate() + 30);
-            const newDueDate = newDueDateObj.toISOString().split('T')[0];
-            
-            updated[shiftKey] = {
-              ...booking,
-              dueDate: newDueDate,
-              status: 'paid'
-            };
-          }
+          const currentDueDate = new Date(booking.dueDate);
+          const newDueDateObj = new Date(currentDueDate);
+          newDueDateObj.setDate(currentDueDate.getDate() + 30);
+          const newDueDate = newDueDateObj.toISOString().split('T')[0];
+          
+          updated[shiftKey] = {
+            ...booking,
+            dueDate: newDueDate,
+            status: 'paid'
+          };
           return updated;
         }
         return seat;
@@ -725,6 +816,75 @@ function App() {
 
           <hr style={{ border: 'none', borderBottom: '1px solid var(--border)', margin: '4px 0' }} />
 
+          {/* Monthly Financial Stats Section */}
+          <div className="billing-summary-section" style={{
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid var(--border)',
+            borderRadius: '12px',
+            padding: '14px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Month's Collection
+              </span>
+              <span className="badge" style={{ background: 'var(--accent)', color: '#fff', fontSize: '11px', padding: '3px 8px', borderRadius: '6px', fontWeight: '600' }}>
+                {currentBillingMonth}
+              </span>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500' }}>
+                Total Received
+              </span>
+              <span style={{ fontSize: '22px', fontWeight: '700', color: 'var(--status-paid)', fontFamily: 'var(--font-heading)' }}>
+                ₹{currentMonthCollection}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => setIsHistoryOpen(true)}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  gap: '6px', 
+                  fontSize: '11px', 
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                <Clock size={12} />
+                History
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={handleRolloverMonth}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  gap: '6px', 
+                  fontSize: '11px', 
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  background: 'var(--accent)',
+                  cursor: 'pointer'
+                }}
+              >
+                <RefreshCw size={12} />
+                Next Month
+              </button>
+            </div>
+          </div>
+
+          <hr style={{ border: 'none', borderBottom: '1px solid var(--border)', margin: '4px 0' }} />
+
           {/* Alerts Notifications List */}
           <div className="alerts-section">
             <h3>⚠️ Attention Required ({alerts.length})</h3>
@@ -956,6 +1116,116 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Payment History Modal */}
+      {isHistoryOpen && (() => {
+        const allSummaries = [
+          {
+            month: currentBillingMonth,
+            totalCollected: currentMonthCollection,
+            activeBookings: seats.filter(s => s.morning || s.evening || s.fullday).length,
+            isCurrent: true
+          },
+          ...[...monthlySummaries].reverse()
+        ];
+
+        return (
+          <div className="modal-overlay" onClick={() => setIsHistoryOpen(false)}>
+            <div 
+              className="modal-content glass-panel" 
+              style={{ maxWidth: '600px', width: '95%', maxHeight: '80vh', overflowY: 'auto' }} 
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <h2>Collection History</h2>
+                <button className="modal-close" onClick={() => setIsHistoryOpen(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {allSummaries.map((summary, idx) => {
+                  const monthPayments = payments.filter(p => p.billingMonth === summary.month);
+                  
+                  return (
+                    <details 
+                      key={idx} 
+                      open={summary.isCurrent}
+                      style={{ 
+                        background: 'rgba(255, 255, 255, 0.02)', 
+                        border: '1.5px solid var(--border)', 
+                        borderRadius: '12px', 
+                        padding: '12px' 
+                      }}
+                    >
+                      <summary style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', outline: 'none', listStyle: 'none' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: '600', color: '#fff' }}>
+                            {summary.month}
+                          </span>
+                          {summary.isCurrent && (
+                            <span style={{ color: 'var(--accent)', fontSize: '10px', background: 'rgba(139, 92, 246, 0.1)', padding: '2px 6px', borderRadius: '4px', fontWeight: '500' }}>
+                              Current Active
+                            </span>
+                          )}
+                          {!summary.isCurrent && (
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                              ({summary.activeBookings} seats)
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--status-paid)' }}>
+                            ₹{summary.totalCollected}
+                          </span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>▼</span>
+                        </div>
+                      </summary>
+                      
+                      <div style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+                        {monthPayments.length === 0 ? (
+                          <p style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', padding: '4px 0' }}>
+                            No payment transactions recorded for this month.
+                          </p>
+                        ) : (
+                          <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse', textAlign: 'left' }}>
+                              <thead>
+                                <tr style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>
+                                  <th style={{ padding: '6px 4px' }}>Seat</th>
+                                  <th style={{ padding: '6px 4px' }}>Student</th>
+                                  <th style={{ padding: '6px 4px' }}>Shift</th>
+                                  <th style={{ padding: '6px 4px', textAlign: 'right' }}>Amount</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {monthPayments.map((p, pIdx) => (
+                                  <tr key={p.id || pIdx} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                                    <td style={{ padding: '8px 4px' }}>Seat {p.seatId}</td>
+                                    <td style={{ padding: '8px 4px', fontWeight: '500', color: '#fff' }}>{p.studentName}</td>
+                                    <td style={{ padding: '8px 4px' }}>
+                                      <span className={`shift-tag ${p.shiftType}`}>
+                                        {p.shiftType === 'fullday' ? 'FD' : p.shiftType === 'morning' ? 'M' : 'E'}
+                                      </span>
+                                    </td>
+                                    <td style={{ padding: '8px 4px', textAlign: 'right', fontWeight: '600', color: 'var(--status-paid)' }}>
+                                      ₹{p.amount}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </details>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Translucent Drawer Overlay for Mobile */}
       {isLedgerOpen && (
