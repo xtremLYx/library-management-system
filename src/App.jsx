@@ -126,7 +126,7 @@ function App() {
   };
   
   // Active view toggle on the map (Morning / Evening / Full Day)
-  const [viewShift, setViewShift] = useState('morning');
+  const [viewShift, setViewShift] = useState('all');
   
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
